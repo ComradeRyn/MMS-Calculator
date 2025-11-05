@@ -16,13 +16,24 @@ class MMS:
 
     MMSArray = None
 
+    satisfiesMMS = None
+
     def __init__(self, input):
         self.costsArray = input.astype(np.float128)
         self.agents = np.arange(0, self.costsArray.shape[0], dtype = np.uint64)
         self.goods = set(np.arange(0, self.costsArray.shape[1], dtype = np.uint64))
+        
+        
         self.agentCount = self.agents.shape[0]
-        self.Allocations = self.PopulateAllAllocations(self.goods, self.agentCount)
-        self.MMSArray = self.FindMMSArray()
+        # print(self.agentCount)
+        self.MMSArray = np.full((self.agentCount), -1)
+        # print(self.MMSArray)
+
+        self.PopulateAllAllocations(self.goods, self.agentCount, self.FindMMSArray) #populate the MMS array
+        # self.Allocations = self.PopulateAllAllocations(self.goods, self.agentCount)
+        # self.MMSArray = self.FindMMSArray()
+
+
 
     
     #AI created this function to find all integer partitions
@@ -60,64 +71,71 @@ class MMS:
                 yield (first_part,) + rest_of_partition
 
     #Finds all possible allocations given a set, and desired sizes of subsets
-    def FindAllocations(self, subsetLengths, testSubset, setOfAllocations, subsetPtr, currentSubset):
+    def FindAllocations(self, subsetLengths, testSubset, setOfAllocations, subsetPtr, currentSubset, func):
         for combo in combinations(testSubset, subsetLengths[subsetPtr]):
             nextSubset = currentSubset[:]
             nextSubset.append(combo)
             if(subsetPtr == len(subsetLengths) - 1):
-                setOfAllocations.add(frozenset(nextSubset))
+                # print(frozenset(nextSubset))
+                # setOfAllocations.add(frozenset(nextSubset))
+                func(frozenset(nextSubset))
                 return
             nonAllocatedItems = testSubset.copy().difference(combo)
-            self.FindAllocations(subsetLengths, nonAllocatedItems, setOfAllocations, subsetPtr+1, nextSubset)
+            self.FindAllocations(subsetLengths, nonAllocatedItems, setOfAllocations, subsetPtr+1, nextSubset, func)
     
     #Returns a list of all possible allocations for a given allocation problem
-    def PopulateAllAllocations(self, inputSet, numberOfAgents):
+    def PopulateAllAllocations(self, inputSet, numberOfAgents, func):
         intgerPartions = list(self.FindIntegerPartition(len(inputSet), numberOfAgents))
         allAllocations = set()
         for partition in intgerPartions:
             subAllocations = set()
-            self.FindAllocations(partition, inputSet, subAllocations, 0, list())
+            self.FindAllocations(partition, inputSet, subAllocations, 0, list(), func)
             allAllocations = allAllocations | subAllocations
         return allAllocations
     
     #takes a costsArray, and returns the MMS for each agent
-    def FindMMSArray(self):
+    def FindMMSArray(self, al):
         #ID in the array corresponds to MMS value for that given agent
-        MMSArray = np.zeros(self.agentCount, dtype=np.float64)
-
         for i in self.agents:
-            currentMMS = -1
-            for al in self.Allocations:
-                current = sys.maxsize
-                for sub in al:
-                    sum = 0
-                    for item in sub:
-                        sum += self.costsArray[i][item]
-                    current = min([sum, current])
-                currentMMS = max([current, currentMMS])
-            MMSArray[i] = currentMMS   
-
-        return MMSArray
+            currentMMS = self.MMSArray[i]
+            current = sys.maxsize
+            for sub in al:
+                sum = 0
+                for item in sub:
+                    sum += self.costsArray[i][item]
+                current = min([sum, current])
+            currentMMS = max([current, currentMMS])
+            self.MMSArray[i] = currentMMS   
 
     #Sees if there exists any allocations where MMS is satisfied
-    def existMMS(self):
+    def existMMSHelper(self, allocation):
         #creates agents array
         agents = np.arange(0, self.costsArray.shape[0], dtype = np.uint8)
-        for allocation in self.Allocations:
-            perms = permutations(allocation)
-            isMMS = True
-            for perm in perms:
-                currentAl = list(zip(agents, perm))
-                for al in currentAl:
-                    currentSum = 0
-                    for i in al[1]:
-                        currentSum += self.costsArray[al[0]][i]
-                    isMMS = currentSum >= self.MMSArray[al[0]]
-                    if not isMMS:
-                        break
-                if(isMMS):
-                    return currentAl
-                else:
-                    isMMS = True
 
-        return False
+        perms = permutations(allocation)
+        isMMS = True
+        for perm in perms:
+            currentAl = list(zip(agents, perm))
+            for al in currentAl:
+                currentSum = 0
+                for i in al[1]:
+                    currentSum += self.costsArray[al[0]][i]
+                isMMS = currentSum >= self.MMSArray[al[0]]
+                if not isMMS:
+                    break
+            if(isMMS):
+                self.satisfiesMMS = currentAl
+                return
+            else:
+                isMMS = True
+
+    
+    def existMMS(self):
+        self.PopulateAllAllocations(self.goods, self.agentCount, self.existMMSHelper)
+        return self.satisfiesMMS
+
+    
+    
+# test = MMS(np.array([[1,1,1],[1,1,1]]))
+# print(test.MMSArray)
+# print(test.existMMS())
