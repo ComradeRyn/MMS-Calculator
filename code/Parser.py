@@ -20,6 +20,8 @@ def checkMMS(file):
     #Run the tests
     test = MMS(costMatrix)
     hasMMS = test.existMMS()
+    sat = test.satisfiesMMS
+    MMSArr = test.MMSArray
     print(f"MMS array: {test.MMSArray}, Allocation: {hasMMS}")
 
     #If it doesn't exist, add it to the failure array
@@ -27,6 +29,29 @@ def checkMMS(file):
         print("failure point")
         pair = [file, costMatrix]
         notMMS.append(pair)
+    
+    if sat:
+        print(f"Cost matrix: \n{costMatrix}")
+        print(f"MMS array: {MMSArr}")
+        print(f"recieved values: {calculateUtility(sat, costMatrix)}")
+
+def calculateUtility(sat, costMatrix):
+    #Create a list of each agent and their total util
+    results = list()
+
+    #Go through all the allocations from the satisfaction array
+    for al in sat:
+        toAdd = list()
+        toAdd.append(int(al[0]))
+        sum = 0
+        #Sum up the utlity of each item in allocation
+        for item in al[1]:
+            sum += costMatrix[al[0]][item]
+        toAdd.append(float(sum))
+        results.append(toAdd)
+    
+    return results
+
 
 #Checks to see if the user input is valid
 if(not os.path.isdir(input) and not os.path.isfile(input)):
