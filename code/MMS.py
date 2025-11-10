@@ -19,7 +19,7 @@ class MMS:
     satisfiesMMS = None
 
     def __init__(self, input):
-        self.costsArray = input.astype(np.float128)
+        self.costsArray = input.astype(np.float32)
         self.agents = np.arange(0, self.costsArray.shape[0], dtype = np.uint64)
         self.goods = set(np.arange(0, self.costsArray.shape[1], dtype = np.uint64))
         
