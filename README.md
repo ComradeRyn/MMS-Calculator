@@ -26,4 +26,4 @@ Choose your parser that you wish to use
 
 Then run the script in the terminal with the following structure
 The inputs for both parsers is a directory full of CSV files or a single CSV file that represents a cost matrix
-All resulting output will be printed to the terminal
+All resulting output will be printed to the terminal.
