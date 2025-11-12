@@ -19,7 +19,7 @@ class MMS:
     satisfiesMMS = None
 
     def __init__(self, input):
-        self.costsArray = input.astype(np.float32)
+        self.costsArray = input.astype(np.float64)
         self.agents = np.arange(0, self.costsArray.shape[0], dtype = np.uint64)
         self.goods = set(np.arange(0, self.costsArray.shape[1], dtype = np.uint64))
         
@@ -110,6 +110,9 @@ class MMS:
     #Sees if there exists any allocations where MMS is satisfied
     def existMMSHelper(self, allocation):
         #creates agents array
+        if(self.satisfiesMMS != None):
+            return
+
         agents = np.arange(0, self.costsArray.shape[0], dtype = np.uint8)
 
         perms = permutations(allocation)
@@ -125,6 +128,7 @@ class MMS:
                     break
             if(isMMS):
                 self.satisfiesMMS = currentAl
+                print(f"{perm}")
                 return
             else:
                 isMMS = True
