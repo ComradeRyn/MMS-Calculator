@@ -76,8 +76,4 @@ if notMMS:
 else:
     print("none :)")
 
-#TODO
-#Make it so this code moves through an entire folder full of CSV files
-#Make a script which makes randomly generated csv files according to the number of items and agents
-#Make it so sharing is accounted for.
-#Go to sleep, its currently 3 AM :)
+
